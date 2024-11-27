@@ -22,6 +22,8 @@ __pycache__/*
 .idea
 .vscode
 tags
+dev
+legacy
 
 # Package files
 *.egg

@@ -1,28 +1,6 @@
 .. These are examples of badges you might want to add to your README:
    please update the URLs accordingly
 
-    .. image:: https://api.cirrus-ci.com/github/<USER>/library-prep-plate-prep.svg?branch=main
-        :alt: Built Status
-        :target: https://cirrus-ci.com/github/<USER>/library-prep-plate-prep
-    .. image:: https://readthedocs.org/projects/library-prep-plate-prep/badge/?version=latest
-        :alt: ReadTheDocs
-        :target: https://library-prep-plate-prep.readthedocs.io/en/stable/
-    .. image:: https://img.shields.io/coveralls/github/<USER>/library-prep-plate-prep/main.svg
-        :alt: Coveralls
-        :target: https://coveralls.io/r/<USER>/library-prep-plate-prep
-    .. image:: https://img.shields.io/pypi/v/library-prep-plate-prep.svg
-        :alt: PyPI-Server
-        :target: https://pypi.org/project/library-prep-plate-prep/
-    .. image:: https://img.shields.io/conda/vn/conda-forge/library-prep-plate-prep.svg
-        :alt: Conda-Forge
-        :target: https://anaconda.org/conda-forge/library-prep-plate-prep
-    .. image:: https://pepy.tech/badge/library-prep-plate-prep/month
-        :alt: Monthly Downloads
-        :target: https://pepy.tech/project/library-prep-plate-prep
-    .. image:: https://img.shields.io/twitter/url/http/shields.io.svg?style=social&label=Twitter
-        :alt: Twitter
-        :target: https://twitter.com/library-prep-plate-prep
-
 .. image:: https://img.shields.io/badge/-PyScaffold-005CA0?logo=pyscaffold
     :alt: Project generated with PyScaffold
     :target: https://pyscaffold.org/
@@ -41,6 +19,13 @@ A longer description of your project goes here...
 
 
 .. _pyscaffold-notes:
+
+References
+====
+
+- 2016 Mathematical modeling. 4.3.4 The Transportation Problem
+- 2015 Princeton companion mathematics. VI.18 The Traveling Salesman Problem. William Cook
+- 2023 Design Heuristics 2.5.4 Quadratic Assignment, 9 Local Search Learning, 9.2 Strategic Oscillations, code listing 9.1
 
 Note
 ====
