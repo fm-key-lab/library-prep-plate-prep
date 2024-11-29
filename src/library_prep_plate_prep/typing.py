@@ -1,6 +1,9 @@
 from enum import StrEnum
 
+import pandas as pd
 import pandera as pa
+
+pd.set_option('future.no_silent_downcasting', True)
 
 
 class Relationship(StrEnum):
@@ -38,12 +41,29 @@ class SampleInfoSchema(pa.DataFrameModel):
         )
 
 
-class LibrarySchema(pa.DataFrameModel):
+class SourcePlateSchema(pa.DataFrameModel):
     ini_library: str
     ini_plate: str
     ini_well: str
     ini_lib_conc: str
 
 
-class LibPrepDataSchema(SampleInfoSchema, LibrarySchema):
+class LibPrepDataSchema(SampleInfoSchema, SourcePlateSchema):
     relationship: str = pa.Field(isin=list(Relationship))
+    timepoint: int
+    
+    @pa.parser('timepoint')
+    def timepoint_to_days(cls, s):
+
+        TIMEPOINT_KEY = {
+            'vor': -1,
+            '2W': 14,
+            '4W': 28,
+            '2M': 61,
+            '3M': 91,
+            '6M': 183,
+            '9M': 271,
+            '12M': 365,
+        }
+        
+        return s.replace(TIMEPOINT_KEY).astype(int)

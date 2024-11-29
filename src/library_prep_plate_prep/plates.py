@@ -1,125 +1,102 @@
 import string
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 import numpy as np
 import xarray as xr
 
 
-@dataclass
-class PlateOccupancy:
-    num_samples: int
-    num_blanks: int = field(init=False)
-    num_controls: int = field(init=False)
-    num_rows: int = field(init=False)
-    num_columns: int = field(init=False)
-    num_plates: int = field(init=False)
-    controls_per_plate: int = 3
-    shape: np.ndarray = field(default_factory=lambda: np.array([12, 8])) # columns x rows
+class Plate:
+    def __init__(self, columns, rows):
+        self.columns = columns
+        self.rows = rows
+        self.wells = columns * rows
+        self._samples = np.zeros((columns, rows), dtype='str')
+        self._data = self.as_xr_dataset()
 
     @property
-    def summary(self) -> dict[str, int]:
-        return {
-            'num_samples': self.num_samples,
-            'num_rows': self.num_rows,
-            'num_controls': self.num_controls,
-            'num_blanks': self.num_blanks,
-            'num_columns': self.num_columns,
-            'num_plates': self.num_plates,
-        }
+    def data(self):
+        return self._data
 
-    def required_controls(self):
-        # TODO: Enforce a minimum number of control wells per plate?
-        return np.ceil(self.controls_per_plate * self.num_samples / (self.shape.prod() - self.controls_per_plate))
+    @data.setter
+    def data(self, data: xr.Dataset):
+        self.samples = data['samples'].values
+        self._data = self.as_xr_dataset()
 
-    def required_plates(self, total_samples):
-        '''Fill each plate column completely (max volume, min blanks).'''
-        samples_per_col = self.shape[1] # Num. of wells in a column equal to num. rows
-        columns = np.ceil(total_samples / samples_per_col)
-        return columns * samples_per_col / self.shape.prod()
+    @property
+    def x_y(self):        
+        return (
+            self.data
+            .where(self.data['occupied'], drop=True)
+            .coords
+            .to_index()
+            .to_frame()
+            .values
+        )
 
-    def remaining_wells(self):
-        pass
+    @property
+    def samples(self):
+        return self._samples
+    
+    @samples.setter
+    def samples(self, samples):
+        self._samples = samples
+
+    @property
+    def occupied(self):
+        return self.samples != ''
+
+    def as_xr_dataset(self):
+        plate_coords = {}
+
+        # NOTE: Physical coordinates on unit intervals
+        plate_coords['x'] = np.arange(self.columns)
+        plate_coords['y'] = np.arange(self.rows)
+
+        # Plate label coordinates
+        plate_coords = self._make_plate_labels(plate_coords)
+
+        # TODO: Should use (columns, rows) as coords (not (x, y))
+        return xr.Dataset(
+            {
+                'occupied': (['x', 'y'], self.occupied),
+                'samples': (['x', 'y'], self.samples),
+            },
+            coords=plate_coords,
+        )
+
+    def _make_plate_labels(self, coords: dict):
+
+        def make_column_labels():
+            return np.arange(self.columns) + 1
+        
+        def make_row_labels():
+            return np.array(list(string.ascii_uppercase[:self.rows]))
+
+        def make_well_labels(column_labels, row_labels):
+            return np.char.add(
+                *np.broadcast_arrays(
+                    row_labels[None, :],
+                    column_labels[:, None].astype(str)
+                )
+            )
+        
+        coords['columns'] = ('x', make_column_labels())
+        coords['rows'] = ('y', make_row_labels())
+        coords['wells'] = (
+            ('x', 'y'), 
+            make_well_labels(coords['columns'][1], coords['rows'][1])
+        )
+        
+        return coords
+
+    def __deepcopy__(self, memo):
+        self.data = self.data.copy(deep=True)
+        return self
+
+@dataclass
+class Plate_96W(Plate):
+    columns: int = 12
+    rows: int = 8
 
     def __post_init__(self):
-        tot_columns, tot_rows = self.shape
-        
-        # NOTE: Fill entire columns (so all rows used)
-        self.num_rows = int(tot_rows)
-
-        num_controls = self.required_controls()
-
-        # NOTE: Handles edge cases where filling out columns (rounding up) -> 
-        #       more controls needed than `num_controls`.
-        #       (Unsure when such cases exist...)
-        fractional_plates = 0 # init
-        adj = 0
-        while np.ceil(self.controls_per_plate * fractional_plates) != num_controls:
-            fractional_plates = self.required_plates(self.num_samples + num_controls)
-            num_controls += adj
-            adj += 1
-        
-        self.num_controls = int(num_controls)
-        self.num_columns = int(tot_columns * fractional_plates) # Num. of wells in a column equal to num. rows
-        self.num_plates = int(np.ceil(fractional_plates))
-        self.num_blanks = int(self.shape.prod() * fractional_plates - (self.num_samples + self.num_controls))
-
-
-class Plate:
-    def __init__(self, shape):
-        self._values = np.zeros(shape)
-        self.data = None
-        self.shape = shape # columns x rows
-        self._init()
-
-    @property
-    def values(self):
-        return self._values
-    
-    @values.setter
-    def values(self, values):
-        self._values = values
-
-    def _init(self):
-        labels = make_plate_labels(*self.shape)
-
-        # NOTE: Physical coordinates on unit interval
-        self.data = xr.DataArray(
-            data=self.values,
-            coords={
-                'x': np.arange(self.shape[0]),
-                'y': np.arange(self.shape[1]),
-                'column': ('x', labels[0]),
-                'row': ('y', labels[1]),
-                'well': (('x', 'y'), labels[2]),
-            },
-            dims=['x', 'y']
-        )
-
-    def __str__(self):
-        return f'Plate({self.shape[0]} columns, {self.shape[1]} rows)'
-    
-    def __repr__(self):
-        return str(self)
-
-
-def make_plate_labels(num_columns, num_rows) -> list[np.ndarray, np.ndarray, np.ndarray]:
-
-    def columns():
-        return np.arange(num_columns) + 1
-    
-    def rows():
-        return np.array(list(string.ascii_uppercase[:num_rows]))
-
-    column_labels, row_labels = columns(), rows()
-
-    def wells():
-        return np.char.add(
-            *np.broadcast_arrays(
-                row_labels[None, :],
-                column_labels[:, None].astype(str)
-            )
-        )
-    
-    well_labels = wells()
-    
-    return column_labels, row_labels, well_labels
+        super().__init__(self.columns, self.rows)
