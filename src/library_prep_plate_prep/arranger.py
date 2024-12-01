@@ -41,10 +41,13 @@ class PlateArranger:
         self._arrange_samples()
         
         if return_df:
-            return pd.concat(
-                [plate.as_df() for plate in self.solution['plates']],
-                ignore_index=True,
-            )        
+            return (
+                pd.concat(
+                    [plate.as_df() for plate in self.solution['plates']],
+                    ignore_index=True,
+                )
+                .set_index(['column', 'row'])
+            )
 
     def _calc_occupancy(self, num_samples, controls_per_plate):
         

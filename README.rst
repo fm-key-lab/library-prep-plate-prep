@@ -26,16 +26,22 @@ Usage
     from library_prep_plate_prep.simulate import simulate_data
 
     design = simulate_data()
-    print(design.head())
+    print(design.head(2))
     #         donor  timepoint  family
     # sample                          
     # 0           8          4       6
     # 1           4          3       9
 
     plate_arranger = PlateArranger()
-    plate_arranger.arrange(design, controls_per_plate=0)
-    print(plate_arranger.soln)
-    # solution
+    arrangement = plate_arranger.arrange(design, return_df=True)
+    print(arrangement.head())
+    #                 sample
+    #  column row           
+    #  1      A    sample_23
+    #         B     sample_2
+    #         C     sample_5
+    #         D     sample_6
+    #         E    sample_45
 
 References
 ==========
