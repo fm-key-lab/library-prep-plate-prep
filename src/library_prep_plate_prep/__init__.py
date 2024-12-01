@@ -1,5 +1,6 @@
 import sys
 
+import pandas as pd
 from importlib.metadata import PackageNotFoundError, version  # pragma: no cover
 
 try:
@@ -9,3 +10,6 @@ except PackageNotFoundError:  # pragma: no cover
     __version__ = "unknown"
 finally:
     del version, PackageNotFoundError
+
+
+pd.set_option('future.no_silent_downcasting', True)

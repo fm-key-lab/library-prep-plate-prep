@@ -10,7 +10,7 @@ class Plate:
         self.columns = columns
         self.rows = rows
         self.wells = columns * rows
-        self._samples = np.zeros((columns, rows), dtype='str')
+        self._samples = np.zeros((columns, rows), dtype='<U20')
         self._data = self.as_xr_dataset()
 
     @property
@@ -23,15 +23,27 @@ class Plate:
         self._data = self.as_xr_dataset()
 
     @property
-    def x_y(self):        
+    def x_y(self):
         return (
             self.data
             .where(self.data['occupied'], drop=True)
-            .coords
-            .to_index()
-            .to_frame()
-            .values
+            [['x', 'y']]
+            .to_array()
+            .to_numpy()
+            .reshape(2, -1)
+            .T
         )
+
+    @property
+    def xy_to_cr(self):
+        return {
+            d: {
+                k: v for k, v in zip(
+                    self.data[c].to_dict()['data'],
+                    self.data[c].to_dict()['coords'][d]['data']
+                )
+            } for c, d in zip(['x', 'y'], ['column', 'row'])
+        }
 
     @property
     def samples(self):
@@ -46,25 +58,31 @@ class Plate:
         return self.samples != ''
 
     def as_xr_dataset(self):
-        plate_coords = {}
-
-        # NOTE: Physical coordinates on unit intervals
-        plate_coords['x'] = np.arange(self.columns)
-        plate_coords['y'] = np.arange(self.rows)
-
-        # Plate label coordinates
-        plate_coords = self._make_plate_labels(plate_coords)
-
-        # TODO: Should use (columns, rows) as coords (not (x, y))
         return xr.Dataset(
             {
-                'occupied': (['x', 'y'], self.occupied),
-                'samples': (['x', 'y'], self.samples),
+                'occupied': (['column', 'row'], self.occupied),
+                'samples': (['column', 'row'], self.samples),
+                
+                # NOTE: Physical coordinates on unit intervals
+                'x': ('column', np.arange(self.columns)),
+                'y': ('row', np.arange(self.rows)),
             },
-            coords=plate_coords,
+            coords=self._make_plate_labels(),
         )
 
-    def _make_plate_labels(self, coords: dict):
+    def as_df(self):
+        return (
+            self.data
+            ['samples']
+            .to_pandas()
+            .melt(ignore_index=False, value_name='sample')
+            .reset_index()
+            .assign(sample=lambda df: df['sample'].replace('', np.nan))
+            .dropna()
+            .sort_values(['column', 'row'])
+        )
+
+    def _make_plate_labels(self):
 
         def make_column_labels():
             return np.arange(self.columns) + 1
@@ -80,11 +98,12 @@ class Plate:
                 )
             )
         
-        coords['columns'] = ('x', make_column_labels())
-        coords['rows'] = ('y', make_row_labels())
-        coords['wells'] = (
-            ('x', 'y'), 
-            make_well_labels(coords['columns'][1], coords['rows'][1])
+        coords = {}
+        coords['column'] = make_column_labels()
+        coords['row'] = make_row_labels()
+        coords['well'] = (
+            ('column', 'row'),
+            make_well_labels(coords['column'], coords['row'])
         )
         
         return coords

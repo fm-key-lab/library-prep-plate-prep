@@ -22,24 +22,19 @@ Usage
 
 .. code-block:: python
 
-    import numpy as np
     from library_prep_plate_prep.arranger import PlateArranger
+    from library_prep_plate_prep.simulate import simulate_data
 
-
-    covariates = ['donor', 'timepoint', 'family']
-    num_samples = 40
-
-    design = np.empty((num_samples, len(covariates)))
-    design[:, 0] = np.random.randint(0, 10, num_samples)
-    design[:, 1] = np.random.randint(0, 10, num_samples)
-    design[:, 2] = np.random.randint(0, 3, num_samples)
+    design = simulate_data()
+    print(design.head())
+    #         donor  timepoint  family
+    # sample                          
+    # 0           8          4       6
+    # 1           4          3       9
 
     plate_arranger = PlateArranger()
-    plate_arranger.arrange(
-        design,
-        controls_per_plate=0
-    )
-
+    plate_arranger.arrange(design, controls_per_plate=0)
+    print(plate_arranger.soln)
     # solution
 
 References
