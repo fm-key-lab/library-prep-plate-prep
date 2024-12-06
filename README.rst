@@ -17,6 +17,19 @@ library-prep-plate-prep
 
 A longer description of your project goes here...
 
+Installation
+============
+
+.. code-block:: bash
+
+    git clone https://github.com/username/library-prep-plate-prep.git
+    cd library-prep-plate-prep
+    pip install -e .
+
+    # or
+
+    pip install git+https://github.com/username/repository.git
+
 Usage
 =====
 
