@@ -23,6 +23,11 @@ def simulate_data(
     data['timepoint'] = rng.integers(1, num_timepoints, num_samples)
     data['family'] = rng.integers(1, num_families, num_samples)
 
-    design = pd.DataFrame(data, index=pd.Index(range(num_samples), name='sample'))
+    sample_names = (
+        'B' + np.strings.zfill(data['family'].astype(str), 3) + '-' 
+          + np.strings.zfill(data['donor'].astype(str), 4) + ' @ ' 
+          + data['timepoint'].astype(str)
+    )
+    idx = pd.Index(sample_names, name='sample')    
     
-    return design
+    return pd.DataFrame(data, index=idx)

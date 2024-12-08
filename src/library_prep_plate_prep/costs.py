@@ -1,10 +1,7 @@
 from abc import ABC, abstractmethod
 
 import numpy as np
-from scipy.linalg import block_diag
 from scipy.spatial import distance_matrix
-
-from library_prep_plate_prep.plates import Plate
 
 
 class CostFn(ABC):
@@ -46,7 +43,7 @@ class CostFn(ABC):
 
 
 class SamplesCostFn(CostFn):
-    """Base class for costs over one or more plates."""
+    """Base class for costs over sequencing samples."""
 
     def all_pairs(self, sample_data: np.ndarray) -> np.ndarray:
         return np.array([[self(x_, y_) for y_ in sample_data] for x_ in sample_data])
@@ -56,8 +53,15 @@ class SamplesCostFn(CostFn):
         pass
 
 
+class SameFamily(SamplesCostFn):
+    """Same family."""
+    
+    def __call__(self, x, y):
+        return ~(x[2] == y[2])
+
+
 class CovarSimilarity(SamplesCostFn):
-    """Sample covariate similarity."""
+    """Covariate similarity."""
     
     COSTS = np.array([0, 1, 2, 4, 10]) * -1
   
@@ -93,13 +97,13 @@ class CovarSimilarity(SamplesCostFn):
 
             else:
                 return self.COSTS[1]
-  
+
 
 class PlateCostFn(CostFn):
     """Base class for costs over one or more plates."""
 
-    def all_pairs(self, plates: list[Plate]) -> np.ndarray:
-        return block_diag(*[self(plate.x_y) for plate in plates])
+    def all_pairs(self, x_y: np.ndarray) -> np.ndarray:
+        return np.array(self(x_y))
 
     @abstractmethod
     def __call__(self, x, y) -> float:
