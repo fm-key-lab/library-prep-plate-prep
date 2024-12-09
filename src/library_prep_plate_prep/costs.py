@@ -3,10 +3,12 @@ from abc import ABC, abstractmethod
 import numpy as np
 from scipy.spatial import distance_matrix
 
+__all__ = ['SamplesCostFn', 'SameFamily', 'CovarSimilarity', 'PlateCostFn', 'SqEuclidean']
+
 
 class CostFn(ABC):
     """Base class for all costs."""
-    
+
     @abstractmethod
     def __call__(self, x: np.ndarray, y: np.ndarray) -> float:
         """Compute cost between :math:`x` and :math:`y`.
@@ -30,7 +32,7 @@ class CostFn(ABC):
           Array of shape ``[n, m]`` of cost evaluations.
         """
         return np.array([[self(x_, y_) for y_ in y] for x_ in x])
-    
+
     def h(self, z: np.ndarray):
         """Transformation-invariant function.
 
@@ -55,24 +57,24 @@ class SamplesCostFn(CostFn):
 
 class SameFamily(SamplesCostFn):
     """Same family."""
-    
+
     def __call__(self, x, y):
         return ~(x[2] == y[2])
 
 
 class CovarSimilarity(SamplesCostFn):
     """Covariate similarity."""
-    
+
     COSTS = np.array([0, 1, 2, 4, 10]) * -1
-  
+
     def __call__(self, x: np.ndarray, y: np.ndarray) -> float:
-        
+
         def one_is_control_or_blank():
             return (x[1] == -1) or (y[1] == -1)
-        
+
         def same_donor():
             return x[0] == y[0]
-        
+
         def same_timepoint():
             return x[1] == y[1]
 
@@ -84,11 +86,11 @@ class CovarSimilarity(SamplesCostFn):
 
         elif not same_family():
             return self.COSTS[0]
-        
+
         else:
             if same_donor() and same_timepoint():
                 return self.COSTS[4]
-            
+
             elif same_donor():
                 return self.COSTS[3]
 

@@ -1,6 +1,10 @@
 import numpy as np
 import pandas as pd
 
+pd.set_option('future.no_silent_downcasting', True)
+
+__all__ = ['simulate_data']
+
 
 def simulate_data(
     num_samples=50,
@@ -25,8 +29,8 @@ def simulate_data(
 
     sample_names = (
         'B' + np.strings.zfill(data['family'].astype(str), 3) + '-' 
-          + np.strings.zfill(data['donor'].astype(str), 4) + ' @ ' 
-          + data['timepoint'].astype(str)
+        + np.strings.zfill(data['donor'].astype(str), 4) + ' @ ' 
+        + np.strings.zfill(data['timepoint'].astype(str), 2) + 'mm'
     )
     idx = pd.Index(sample_names, name='sample')    
     
