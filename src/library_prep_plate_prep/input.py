@@ -1,11 +1,9 @@
 import pandera as pa
 
-from library_prep_plate_prep.typing import (
-    Relationship,
-    Timepoint,
-    TIMEPOINT_KEY,
-)
-    
+from library_prep_plate_prep.types import Relationship, Timepoint
+
+timepoint_key
+
 
 class SampleInfoSchema(pa.DataFrameModel):
     ID: str = pa.Field(str_matches=r'^B\d\d\d_\d\d\d\d$')
@@ -37,4 +35,8 @@ class LibPrepDataSchema(SampleInfoSchema, SourcePlateSchema):
     
     @pa.parser('timepoint')
     def timepoint_to_days(cls, s):
-        return s.replace(TIMEPOINT_KEY).astype(int)
+        return (
+            s
+            .apply(Timepoint)
+            .apply(lambda x: x.to_timedelta().days)
+        )

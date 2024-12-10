@@ -6,6 +6,7 @@ from . import (
     costs,
     geometries,
     # metrics,
+    plotting,
     problems,
     # simulate,
     solvers,

@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from functools import cached_property
 
 import numpy as np
 import pandas as pd
@@ -15,7 +16,7 @@ class Geometry(ABC):
     def __init__(self, cost_matrix=None):
         self._cost_matrix = cost_matrix
 
-    @property
+    @cached_property
     def cost_matrix(self):
         return self.cost_fn.all_pairs(self.x, self.y)
 
@@ -47,7 +48,7 @@ class SequencingSamples(PointCloud):
 
         return cls(data, cost_fn)
 
-    @property
+    @cached_property
     def cost_matrix(self):
         """Re-define for sample covariate geometries."""
         return self.cost_fn.all_pairs(self.design)
@@ -76,7 +77,7 @@ class Grid(Geometry):
 
         self.cost_fn = costs.SqEuclidean() if cost_fn is None else cost_fn
 
-    @property
+    @cached_property
     def cost_matrix(self):
         return self.cost_fn.all_pairs(self.x)
 
@@ -104,7 +105,7 @@ class Plates(Geometry):
     def __init__(self, columns: list[int], rows: list[int], cost_fn=None, **kwargs):
         self._plates = [Plate(c, r, cost_fn=cost_fn, **kwargs) for c, r in zip(columns, rows)]
 
-    @property
+    @cached_property
     def cost_matrix(self):
         """Re-define for lists of plate geometries."""
         return block_diag(*[_plate.cost_matrix for _plate in self._plates])
