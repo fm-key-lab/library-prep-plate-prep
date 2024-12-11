@@ -4,8 +4,7 @@ import numpy as np
 from scipy.optimize import quadratic_assignment
 from smt import sampling_methods
 
-from library_prep_plate_prep import costs
-from library_prep_plate_prep import problems
+from library_prep_plate_prep import costs, problems, utils
 
 __all__ = ['LHSampler', 'QAP_2opt']
 
@@ -36,7 +35,7 @@ class LHSampler(Solver):
             xlims = np.array([[1., getattr(plate, rc)] for rc in ['columns', 'rows']])
             sampler = sampling_methods.LHS(xlimits=xlims, criterion='cm', random_state=random_state)
             ind = self._snap_to_grid(sampler(int(nt[i])))
-            inds.append(np.pad(ind, ((0,0), (1,0)), constant_values=i))
+            inds.append(utils.idx_plate(ind, i))
 
         return {
             'seed': np.concatenate(inds),

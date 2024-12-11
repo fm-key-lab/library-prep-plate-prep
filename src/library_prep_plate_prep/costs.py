@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
+from collections import namedtuple
 
 import numpy as np
+import pandas as pd
 from scipy.spatial import distance_matrix
 
 __all__ = ['SamplesCostFn', 'SameFamily', 'CovarSimilarity', 'PlateCostFn', 'SqEuclidean']
@@ -47,58 +49,76 @@ class CostFn(ABC):
 class SamplesCostFn(CostFn):
     """Base class for costs over sequencing samples."""
 
-    def all_pairs(self, sample_data: np.ndarray) -> np.ndarray:
-        return np.array([[self(x_, y_) for y_ in sample_data] for x_ in sample_data])
+    def all_pairs(self, sample_data: pd.DataFrame) -> np.ndarray:
+        return np.array([[self(x_, y_) for y_ in sample_data.itertuples()] for x_ in sample_data.itertuples()])
 
     @abstractmethod
-    def __call__(self, x, y) -> float:
+    def __call__(self, x: namedtuple, y: namedtuple) -> float:
         pass
 
 
 class SameFamily(SamplesCostFn):
     """Same family."""
 
-    def __call__(self, x, y):
-        return ~(x[2] == y[2])
+    def __call__(self, x: namedtuple, y: namedtuple):
+        return ~int(x.family == y.family)
 
 
 class CovarSimilarity(SamplesCostFn):
     """Covariate similarity."""
 
-    COSTS = np.array([0, 1, 2, 4, 10]) * -1
+    _costs = np.array([1, 2, 4, 10])
+    _rules = ['family', 'family_&_timepoint', 'family_&_donor', 'family_&_donor_&_timepoint']
+    
+    @property
+    def costs(self):
+        return -1 * self._costs
 
-    def __call__(self, x: np.ndarray, y: np.ndarray) -> float:
+    @costs.setter
+    def costs(self, vals):
+        self._costs = np.array(vals)
+
+    def __call__(self, x: namedtuple, y: namedtuple) -> float:
 
         def one_is_control_or_blank():
-            return (x[1] == -1) or (y[1] == -1)
+            return (x.family == -1) or (y.family == -1)
 
         def same_donor():
-            return x[0] == y[0]
+            return x.donor == y.donor
 
         def same_timepoint():
-            return x[1] == y[1]
+            return x.timepoint == y.timepoint
 
         def same_family():
-            return x[2] == y[2]
+            return x.family == y.family
 
         if one_is_control_or_blank():
-            return self.COSTS[0]
+            return 0
 
         elif not same_family():
-            return self.COSTS[0]
+            return 0
 
         else:
             if same_donor() and same_timepoint():
-                return self.COSTS[4]
+                return self.costs[3]
 
             elif same_donor():
-                return self.COSTS[3]
+                return self.costs[2]
 
             elif same_timepoint():
-                return self.COSTS[2]
+                return self.costs[1]
 
             else:
-                return self.COSTS[1]
+                return self.costs[0]
+
+    @classmethod
+    def from_rules(cls, rules):
+        cfn = cls()
+        cfn.costs = [rules[r] for r in cfn._rules]
+        return cfn
+
+    def as_rules(self):
+        return {r: float(c) for r, c in zip(self._rules, -self.costs)}
 
 
 class PlateCostFn(CostFn):

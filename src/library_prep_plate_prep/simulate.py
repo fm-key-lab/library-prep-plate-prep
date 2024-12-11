@@ -17,6 +17,7 @@ def simulate_data(
         raise ValueError(f'`num_samples` is {num_samples} but must be >= 20')
     
     num_donors = num_samples // 5 if num_donors is None else int(num_donors)
+    num_donors = min(num_donors, 4)
     num_timepoints = num_samples // 10 if num_timepoints is None else int(num_timepoints)
     num_families = num_samples // 20 if num_families is None else int(num_families)
     

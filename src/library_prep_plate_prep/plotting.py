@@ -21,14 +21,15 @@ def plate_costs(
     if not (isinstance(plate, geometries.Plate) or isinstance(plate, geometries.Plates)):
         raise ValueError
     elif isinstance(plate, geometries.Plates):
-        nc = plate._plates[0].columns
-        nr = plate._plates[0].rows
+        plate_ = plate._plates[0]
     else:
-        nc = plate.columns
-        nr = plate.rows
+        plate_ = plate
 
+    nc = plate_.columns
     nc = nc if ncols is None else ncols
-
+    nr = plate_.rows    
+    well_labels = plate_.well_labels.flatten()
+    
     plate_costs_subset = plate.cost_matrix[:nr, :(nr * nc)]
 
     def add_col_outline(ax) -> None:
@@ -57,26 +58,28 @@ def plate_costs(
     ax.set_xlabel('Well Labels', size=10)
     ax.set_ylabel('Well Labels\n(Column 1)', size=10)
 
-    WELL_LABELS = np.arange(nc*nr) # TODO: address with a plate mixin
-    ax.set_xticks(np.arange(nc*nr), WELL_LABELS, size=7);
-    ax.set_yticks(np.arange(nr), WELL_LABELS[:nr], size=8);
+    # WELL_LABELS = np.arange(nc*nr) # TODO: address with a plate mixin
+    ax.set_xticks(np.arange(nc*nr), well_labels[:nc*nr], size=7);
+    ax.set_yticks(np.arange(nr), well_labels[:nr], size=8);
 
     ax.set_title('"Plate distance" costs', size=12)
 
 
 def sample_costs(
     samples: geometries.SequencingSamples,
-    cmap: Optional[dict[str]] = {'family': 'Set1', 'timepoint': 'viridis', 'cost': 'Reds'},
+    cmap: Optional[dict[str]] = {'family': 'Set1', 'donor': 'cubehelix', 'timepoint': 'viridis', 'cost': 'Reds'},
     nonsamples: Optional[list[str]] = ['control', 'empty'],
     ax: Optional[Axes] = None,
 ):
+    
+    dvars = ['family', 'donor', 'timepoint']
     
     design = (
         samples._data
         .copy(deep=True)
         .reset_index()
         .query("index not in @nonsamples")
-        .sort_values(['family', 'timepoint'])
+        .sort_values(dvars)
     )
     
     def plot_marginals():
@@ -96,13 +99,13 @@ def sample_costs(
         x0, y0, width, height = 0, iax_pad, 1, iax_width
         for dim in ['x', 'y']:
             odim = 'y' if dim == 'x' else 'x'
-            for var in ['timepoint', 'family']:
+            for var in dvars[::-1]:
                 add_marginal(var, [x0, y0, width, height], dim, odim)
                 if dim == 'x':
                     y0 -= .05
                 else:
                     x0 -= .05
-            xtmp, ytmp, wtmp, htmp = y0 + .05, x0, height, width
+            xtmp, ytmp, wtmp, htmp = iax_pad, x0, height, width
             x0, y0, width, height = xtmp, ytmp, wtmp, htmp
 
     samples_costs_subset = (

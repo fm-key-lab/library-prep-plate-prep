@@ -1,3 +1,4 @@
+import string
 from abc import ABC, abstractmethod
 from functools import cached_property
 
@@ -5,11 +6,11 @@ import numpy as np
 import pandas as pd
 from scipy.linalg import block_diag
 
-from library_prep_plate_prep import costs
+from library_prep_plate_prep import costs, utils
 
 pd.set_option('future.no_silent_downcasting', True)
 
-__all__ = ['SequencingSamples', 'Plate', 'Plate_96W', 'Plates']
+__all__ = ['Geometry', 'PointCloud', 'Grid', 'SequencingSamples', 'Plate', 'Plate_96W', 'Plates']
 
 
 class Geometry(ABC):
@@ -27,12 +28,12 @@ class PointCloud(Geometry):
         self.x = x
         self.y = self.x if y is None else y
 
-        self.cost_fn = costs.SameFamily() if cost_fn is None else cost_fn
+        self.cost_fn = costs.CovarSimilarity() if cost_fn is None else cost_fn
 
 
 class SequencingSamples(PointCloud):
     def __init__(self, data: pd.DataFrame, cost_fn=None, **kwargs):
-        super().__init__(np.arange(data.shape[0]), cost_fn, **kwargs)
+        super().__init__(np.arange(data.shape[0]), cost_fn=cost_fn, **kwargs)
         self._data = data
         self.design = self._pp(data)
 
@@ -46,7 +47,7 @@ class SequencingSamples(PointCloud):
         nonsample_df.index = nonsample_idx
         data = pd.concat([df, nonsample_df])
 
-        return cls(data, cost_fn)
+        return cls(data, cost_fn=cost_fn)
 
     @cached_property
     def cost_matrix(self):
@@ -64,7 +65,7 @@ class SequencingSamples(PointCloud):
         for var in ['donor', 'timepoint', 'family']:
             data_[var] = _enc_cat(data_[var])
 
-        return data_.values
+        return data_
 
 
 class Grid(Geometry):
@@ -82,14 +83,34 @@ class Grid(Geometry):
         return self.cost_fn.all_pairs(self.x)
 
 
-class Plate(Grid):
+class PlateAttrsMixin:
+    
+    @property
+    def column_labels(self):
+        return np.arange(self.columns) + 1
+    
+    @property
+    def row_labels(self):
+        return np.array(list(string.ascii_uppercase[:self.rows]))
+
+    @property
+    def well_labels(self):
+        return np.char.add(
+            *np.broadcast_arrays(
+                self.row_labels[None, :],
+                self.column_labels[:, None].astype(str)
+            )
+        )
+
+
+class Plate(Grid, PlateAttrsMixin):
     def __init__(self, columns, rows, cost_fn=None, **kwargs):
         self.columns = columns
         self.rows = rows
         self.x_y = np.array(list(np.ndindex(columns, rows))) + 1
 
         # super().__init__(self._rc2x(), cost_fn, **kwargs)
-        super().__init__(self.x_y, cost_fn, **kwargs)
+        super().__init__(self.x_y, cost_fn=cost_fn, **kwargs)
         self.wells = self.num_a
 
     def _rc2x(self):
@@ -98,7 +119,7 @@ class Plate(Grid):
 
 class Plate_96W(Plate):
     def __init__(self, cost_fn=None, **kwargs):
-        super().__init__(12, 8, cost_fn, **kwargs)
+        super().__init__(12, 8, cost_fn=cost_fn, **kwargs)
 
 
 class Plates(Geometry):
@@ -112,6 +133,4 @@ class Plates(Geometry):
 
     @property
     def p_x_y(self):
-        def pidx(a, c):
-            return np.pad(a, ((0,0), (1,0)), constant_values=c)
-        return np.concatenate([pidx(p.x_y, i) for i, p in enumerate(self._plates)])
+        return np.concatenate([utils.idx_plate(p.x_y, i) for i, p in enumerate(self._plates)])
