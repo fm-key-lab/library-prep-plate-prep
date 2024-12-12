@@ -19,13 +19,13 @@ Installation
 
 .. code-block:: bash
 
-    git clone https://github.com/username/library-prep-plate-prep.git
+    git clone https://github.com/t-silvers/library-prep-plate-prep.git
     cd library-prep-plate-prep
     pip install -e .
 
     # or
 
-    pip install git+https://github.com/username/repository.git
+    pip install git+https://github.com/t-silvers/library-prep-plate-prep.git
 
 Usage
 =====
