@@ -58,6 +58,12 @@ In Python:
         'n_empty': 2,
     }
 
+    # plate and sequencing sample geometries
+    plates = lppp.geometries.Plates(
+        plate_init['n_columns'],
+        plate_init['n_rows'],
+        cost_fn=lppp.costs.SqEuclidean()
+    )
     samples = lppp.geometries.SequencingSamples.from_samples(
         sample_data,
         plate_init['n_empty'],
