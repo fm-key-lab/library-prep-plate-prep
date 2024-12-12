@@ -1,6 +1,3 @@
-.. These are examples of badges you might want to add to your README:
-   please update the URLs accordingly
-
 .. image:: https://img.shields.io/badge/-PyScaffold-005CA0?logo=pyscaffold
     :alt: Project generated with PyScaffold
     :target: https://pyscaffold.org/
@@ -12,10 +9,10 @@ library-prep-plate-prep
 =======================
 
 
-    Add a short description here!
+    Find optimal plate arrangements.
 
 
-A longer description of your project goes here...
+Find optimal arrangements for sequencing samples on a plate during library prep.
 
 Installation
 ============
@@ -33,28 +30,90 @@ Installation
 Usage
 =====
 
+From command line:
+
+.. code-block:: bash
+
+    lppp -i /path/to/samples.csv -o arrangement.csv
+
+In Python:
+
 .. code-block:: python
 
-    from library_prep_plate_prep.arranger import PlateArranger
-    from library_prep_plate_prep.simulate import simulate_data
+    import library_prep_plate_prep as lppp
 
-    design = simulate_data()
+    num_samples = 150
+    sample_data = lppp.simulate_data(num_samples)
     print(design.head(2))
-    #         donor  timepoint  family
-    # sample                          
-    # 0           8          4       6
-    # 1           4          3       9
+    # species  donor  family  timepoint
+    # sample                                                          
+    # species 4:B003_0001 @ 03 days        4      1       3          3
+    # species 3:B001_0001 @ 14 days        3      1       1         14
 
-    plate_arranger = PlateArranger()
-    arrangement = plate_arranger.arrange(design, return_df=True)
-    print(arrangement.head())
-    #                 sample
-    #  column row           
-    #  1      A    sample_23
-    #         B     sample_2
-    #         C     sample_5
-    #         D     sample_6
-    #         E    sample_45
+    # Provide initial values
+    plate_init = {
+        'n_controls': [3, 2],
+        'n_columns': [10, 10],
+        'n_rows': [8, 8],
+        'n_empty': 2,
+    }
+
+    samples = lppp.geometries.SequencingSamples.from_samples(
+        sample_data,
+        plate_init['n_empty'],
+        sum(plate_init['n_controls']),
+        cost_fn=lppp.costs.CovarSimilarity()
+    )
+
+    # problem init with geometries
+    prob = lppp.problems.ArrangementProblem(plates, samples)
+
+    # seed control wells
+    ctrls_seeder = lppp.solvers.LHSampler()
+    ctrls_arrangement = ctrls_seeder(prob, nt=plate_init['n_controls'])
+
+    # solve arrangement
+    solver = lppp.solvers.QAP_2opt()
+    soln = solver(prob, partial_match=ctrls_arrangement)
+
+    plate_arrangement = lppp.problems.soln_to_df(prob, soln)
+    print(plate_arrangement)
+
+
+With custom cost functions:
+
+.. code-block:: python
+
+    custom_sample_cost_fn = lppp.costs.CovarSimilarity.from_rules(
+        {
+            'species': 10,
+            'species_&_family': 0,
+            'species_&_donor': 0,
+            'species_&_family_&_timepoint': 0,
+            'species_&_donor_&_family': 0,
+            'species_&_donor_&_family_&_timepoint': 0,
+        }
+    )
+
+    samples = lppp.geometries.SequencingSamples.from_samples(
+        sample_data,
+        plate_init['n_empty'],
+        sum(plate_init['n_controls']),
+        cost_fn=custom_sample_cost_fn
+    )
+
+Plotting tools:
+
+.. code-block:: python
+
+    import matplotlib.pyplot as plt
+
+    fig, ax = plt.subplots(figsize=(4, 4), layout='constrained')
+    lppp.plotting.sample_costs(samples, ax=ax)
+
+.. image:: xcont_costfn.png
+  :width: 400
+  :alt: crosscontamination
 
 References
 ==========

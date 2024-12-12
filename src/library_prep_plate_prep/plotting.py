@@ -5,7 +5,7 @@ from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 from matplotlib.patches import Rectangle
 
-from library_prep_plate_prep import geometries
+from library_prep_plate_prep import geometries, types
 
 __all__ = ['plate_costs', 'sample_costs']
 
@@ -67,12 +67,12 @@ def plate_costs(
 
 def sample_costs(
     samples: geometries.SequencingSamples,
-    cmap: Optional[dict[str]] = {'family': 'Set1', 'donor': 'cubehelix', 'timepoint': 'viridis', 'cost': 'Reds'},
+    cmap: Optional[dict[str]] = {'species': 'Set1', 'donor': 'Set2', 'family': 'cubehelix', 'timepoint': 'viridis', 'cost': 'Reds'},
     nonsamples: Optional[list[str]] = ['control', 'empty'],
     ax: Optional[Axes] = None,
 ):
     
-    dvars = ['family', 'donor', 'timepoint']
+    dvars = list(types.SampleCovars)
     
     design = (
         samples._data

@@ -2,6 +2,13 @@ from datetime import timedelta
 from enum import StrEnum
 
 
+class SampleCovars(StrEnum):
+    SPECIES = 'species'
+    DONOR = 'donor'
+    FAMILY = 'family'
+    TIMEPOINT = 'timepoint'
+
+
 class Relationship(StrEnum):
     FATHER = 'Vater'
     CHILD = 'Kind'

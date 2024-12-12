@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 from scipy.linalg import block_diag
 
-from library_prep_plate_prep import costs, utils
+from library_prep_plate_prep import costs, types, utils
 
 pd.set_option('future.no_silent_downcasting', True)
 
@@ -62,7 +62,7 @@ class SequencingSamples(PointCloud):
 
         data_ = data.copy(deep=True)
 
-        for var in ['donor', 'timepoint', 'family']:
+        for var in list(types.SampleCovars):
             data_[var] = _enc_cat(data_[var])
 
         return data_
