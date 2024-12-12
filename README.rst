@@ -44,7 +44,7 @@ In Python:
 
     num_samples = 150
     sample_data = lppp.simulate_data(num_samples)
-    print(design.head(2))
+    print(sample_data.head(2))
     # species  donor  family  timepoint
     # sample                                                          
     # species 4:B003_0001 @ 03 days        4      1       3          3
