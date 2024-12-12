@@ -114,7 +114,7 @@ Plotting tools:
     lppp.plotting.plate_costs(plates, ncols=5, fig=fig, ax=ax)
 
 .. image:: plate_costfn.png
-  :width: 400
+  :width: 600
   :alt: plate
 
 .. code-block:: python
@@ -125,7 +125,7 @@ Plotting tools:
     lppp.plotting.sample_costs(samples, ax=ax)
 
 .. image:: xcont_costfn.png
-  :width: 400
+  :width: 360
   :alt: crosscontamination
 
 References
