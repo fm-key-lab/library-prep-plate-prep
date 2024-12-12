@@ -77,8 +77,10 @@ In Python:
     soln = solver(prob, partial_match=ctrls_arrangement)
 
     plate_arrangement = lppp.problems.soln_to_df(prob, soln)
-    print(plate_arrangement)
-
+    print(plate_arrangement.head(1))
+    # plate  column row well
+    # sample                                               
+    # species 1:B002_0002 @ 03 days      0       1   A   A1
 
 With custom cost functions:
 
@@ -103,6 +105,17 @@ With custom cost functions:
     )
 
 Plotting tools:
+
+.. code-block:: python
+
+    import matplotlib.pyplot as plt
+
+    fig, ax = plt.subplots(figsize=(9, 2), layout='constrained')
+    lppp.plotting.plate_costs(plates, ncols=5, fig=fig, ax=ax)
+
+.. image:: plate_costfn.png
+  :width: 400
+  :alt: plate
 
 .. code-block:: python
 
