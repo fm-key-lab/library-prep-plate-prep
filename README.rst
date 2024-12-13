@@ -83,6 +83,7 @@ Alternatively, let library-prep-plate-prep calculate reasonable defaults.
         plate_init['n_rows'],
         cost_fn=lppp.costs.SqEuclidean()
     )
+    
     samples = lppp.geometries.SequencingSamples.from_samples(
         sample_data,
         plate_init['n_empty'],
@@ -118,20 +119,6 @@ Custom cost functions can be used, either by subclassing Python cost function cl
 
     prob = lppp.problems.ArrangementProblem(plates, samples)
 
-    # seed control wells
-    ctrls_seeder = lppp.solvers.LHSampler()
-    ctrls_arrangement = ctrls_seeder(prob, nt=plate_init['n_controls'])
-
-    # solve arrangement
-    solver = lppp.solvers.QAP_2opt()
-    soln = solver(prob, partial_match=ctrls_arrangement)
-
-    plate_arrangement = lppp.problems.soln_to_df(prob, soln)
-    print(plate_arrangement.head(1))
-    # plate  column row well
-    # sample                                               
-    # species 1:B002_0002 @ 03 days      0       1   A   A1
-
 5. Set up the seeded arrangement problem by first allocating control wells using a space-filling design method (here, Latin Hypercube Sampling).
 
 .. code-block:: python
@@ -139,7 +126,7 @@ Custom cost functions can be used, either by subclassing Python cost function cl
     ctrls_seeder = lppp.solvers.LHSampler()
     ctrls_arrangement = ctrls_seeder(prob, nt=plate_init['n_controls'])
 
-6. Solve the plate arrangement problem.
+6. Select a solver and solve the plate arrangement problem.
 
 .. code-block:: python
 
