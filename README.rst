@@ -30,63 +30,70 @@ Installation
 Usage
 =====
 
-From command line:
+Command line interface
+----------------------
 
 .. code-block:: bash
 
     lppp -i /path/to/samples.csv -o arrangement.csv
 
-In Python:
 
-.. code-block:: python
+Python package
+--------------
 
-    import library_prep_plate_prep as lppp
+Finer user control is possible with the Python package.
 
-    num_samples = 150
-    sample_data = lppp.simulate_data(num_samples)
-    print(sample_data.head(2))
-    # species  donor  family  timepoint
-    # sample                                                          
-    # species 4:B003_0001 @ 03 days        4      1       3          3
-    # species 3:B001_0001 @ 14 days        3      1       1         14
+#. Import sequencing sample data.
 
-    # Provide initial values
-    plate_init = {
-        'n_controls': [3, 2],
-        'n_columns': [10, 10],
-        'n_rows': [8, 8],
-        'n_empty': 2,
-    }
+    .. code-block:: python
 
-    # plate and sequencing sample geometries
-    plates = lppp.geometries.Plates(
-        plate_init['n_columns'],
-        plate_init['n_rows'],
-        cost_fn=lppp.costs.SqEuclidean()
-    )
-    samples = lppp.geometries.SequencingSamples.from_samples(
-        sample_data,
-        plate_init['n_empty'],
-        sum(plate_init['n_controls']),
-        cost_fn=lppp.costs.CovarSimilarity()
-    )
+        import library_prep_plate_prep as lppp
 
-    # problem init with geometries
-    prob = lppp.problems.ArrangementProblem(plates, samples)
+        num_samples = 150
+        sample_data = lppp.simulate_data(num_samples)
+        print(sample_data.head(2))
+        # species  donor  family  timepoint
+        # sample                                                          
+        # species 4:B003_0001 @ 03 days        4      1       3          3
+        # species 3:B001_0001 @ 14 days        3      1       1         14
 
-    # seed control wells
-    ctrls_seeder = lppp.solvers.LHSampler()
-    ctrls_arrangement = ctrls_seeder(prob, nt=plate_init['n_controls'])
+        # Provide initial values
+        plate_init = {
+            'n_controls': [3, 2],
+            'n_columns': [10, 10],
+            'n_rows': [8, 8],
+            'n_empty': 2,
+        }
 
-    # solve arrangement
-    solver = lppp.solvers.QAP_2opt()
-    soln = solver(prob, partial_match=ctrls_arrangement)
+        # plate and sequencing sample geometries
+        plates = lppp.geometries.Plates(
+            plate_init['n_columns'],
+            plate_init['n_rows'],
+            cost_fn=lppp.costs.SqEuclidean()
+        )
+        samples = lppp.geometries.SequencingSamples.from_samples(
+            sample_data,
+            plate_init['n_empty'],
+            sum(plate_init['n_controls']),
+            cost_fn=lppp.costs.CovarSimilarity()
+        )
 
-    plate_arrangement = lppp.problems.soln_to_df(prob, soln)
-    print(plate_arrangement.head(1))
-    # plate  column row well
-    # sample                                               
-    # species 1:B002_0002 @ 03 days      0       1   A   A1
+        # problem init with geometries
+        prob = lppp.problems.ArrangementProblem(plates, samples)
+
+        # seed control wells
+        ctrls_seeder = lppp.solvers.LHSampler()
+        ctrls_arrangement = ctrls_seeder(prob, nt=plate_init['n_controls'])
+
+        # solve arrangement
+        solver = lppp.solvers.QAP_2opt()
+        soln = solver(prob, partial_match=ctrls_arrangement)
+
+        plate_arrangement = lppp.problems.soln_to_df(prob, soln)
+        print(plate_arrangement.head(1))
+        # plate  column row well
+        # sample                                               
+        # species 1:B002_0002 @ 03 days      0       1   A   A1
 
 With custom cost functions:
 
