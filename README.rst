@@ -68,7 +68,7 @@ Finer user control is possible with the Python package.
             'n_empty': 2,
         }
 
-    Alternatively, let library-prep-plate-prep calculate reasonable defaults.
+Alternatively, let library-prep-plate-prep calculate reasonable defaults.
 
     .. code-block:: python
 
@@ -90,7 +90,7 @@ Finer user control is possible with the Python package.
             cost_fn=lppp.costs.CovarSimilarity()
         )
 
-    Custom cost functions can be used, either by subclassing Python cost function classes or using convenience class methods.
+Custom cost functions can be used, either by subclassing Python cost function classes or using convenience class methods.
 
     .. code-block:: python
 
