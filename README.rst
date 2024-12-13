@@ -91,7 +91,7 @@ Alternatively, let library-prep-plate-prep calculate reasonable defaults.
         cost_fn=lppp.costs.CovarSimilarity()
     )
 
-Custom cost functions can be used, either by subclassing Python cost function classes or using convenience functions. In this customization, we are saying that two samples of the same species should evaluate to a high cost, and that no other covariates are important. (All non-specified "rules" have a cost of 0.)
+Custom cost functions can be used, either by subclassing Python cost function classes or using convenience functions. In the customization below, we are "saying" that two samples of the same species should evaluate to a high cost, and that no other covariates are important. (All non-specified "rules" have a cost of 0.)
 
 .. code-block:: python
 
