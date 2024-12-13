@@ -91,7 +91,7 @@ Alternatively, let library-prep-plate-prep calculate reasonable defaults.
         cost_fn=lppp.costs.CovarSimilarity()
     )
 
-Custom cost functions can be used, either by subclassing Python cost function classes or using convenience class methods.
+Custom cost functions can be used, either by subclassing Python cost function classes or using convenience functions.
 
 .. code-block:: python
 
