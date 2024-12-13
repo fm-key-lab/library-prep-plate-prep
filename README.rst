@@ -43,7 +43,7 @@ Python package
 
 Finer user control is possible with the Python package.
 
-#. Import sequencing sample data.
+1. Import sequencing sample data.
 
 .. code-block:: python
 
@@ -57,7 +57,7 @@ Finer user control is possible with the Python package.
     # species 4:B003_0001 @ 03 days        4      1       3          3
     # species 3:B001_0001 @ 14 days        3      1       1         14
 
-#. Provide initial values for the solvers. Except for the number of empty wells, values must be passed as a per-plate list, where all lists share a length equaling the total number of plates.
+2. Provide initial values for the solvers. Except for the number of empty wells, values must be passed as a per-plate list, where all lists share a length equaling the total number of plates.
 
 .. code-block:: python
 
@@ -74,7 +74,7 @@ Alternatively, let library-prep-plate-prep calculate reasonable defaults.
 
     plate_init = lppp.utils.calc_init_vals(sample_data.shape[0])
 
-#. Plate arrangement problems accept a plate geometry object and sample geometry object. These geometry objects have an associated cost function, calculated over observed values in the associated metric space.
+3. Plate arrangement problems accept a plate geometry object and sample geometry object. These geometry objects have an associated cost function, calculated over observed values in the associated metric space.
 
 .. code-block:: python
 
@@ -112,7 +112,7 @@ Custom cost functions can be used, either by subclassing Python cost function cl
         cost_fn=custom_sample_cost_fn
     )
 
-#. Initialize the plate arrangement problem.
+4. Initialize the plate arrangement problem.
 
 .. code-block:: python
 
@@ -132,14 +132,14 @@ Custom cost functions can be used, either by subclassing Python cost function cl
     # sample                                               
     # species 1:B002_0002 @ 03 days      0       1   A   A1
 
-#. Set up the seeded arrangement problem by first allocating control wells using a space-filling design method (here, Latin Hypercube Sampling).
+5. Set up the seeded arrangement problem by first allocating control wells using a space-filling design method (here, Latin Hypercube Sampling).
 
 .. code-block:: python
 
     ctrls_seeder = lppp.solvers.LHSampler()
     ctrls_arrangement = ctrls_seeder(prob, nt=plate_init['n_controls'])
 
-#. Solve the plate arrangement problem.
+6. Solve the plate arrangement problem.
 
 .. code-block:: python
 
