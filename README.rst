@@ -74,7 +74,7 @@ Alternatively, let library-prep-plate-prep calculate reasonable defaults.
 
     plate_init = lppp.utils.calc_init_vals(sample_data.shape[0])
 
-3. Plate arrangement problems accept a plate geometry object and sample geometry object. These geometry objects have an associated cost function, calculated over observed values in the associated metric space.
+3. Plate arrangement problems require a plate geometry object and a sample geometry object. Geometry objects have an associated cost function, calculated over observed values in the associated metric space.
 
 .. code-block:: python
 
@@ -83,7 +83,7 @@ Alternatively, let library-prep-plate-prep calculate reasonable defaults.
         plate_init['n_rows'],
         cost_fn=lppp.costs.SqEuclidean()
     )
-    
+
     samples = lppp.geometries.SequencingSamples.from_samples(
         sample_data,
         plate_init['n_empty'],
