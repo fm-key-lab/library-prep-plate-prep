@@ -57,7 +57,10 @@ Finer user control is possible with the Python package.
         # species 4:B003_0001 @ 03 days        4      1       3          3
         # species 3:B001_0001 @ 14 days        3      1       1         14
 
-        # Provide initial values
+#. Provide initial values for the solvers. Except for the number of empty wells, values must be passed as a per-plate list, where all lists share a length equaling the total number of plates.
+
+    .. code-block:: python
+
         plate_init = {
             'n_controls': [3, 2],
             'n_columns': [10, 10],
@@ -65,7 +68,16 @@ Finer user control is possible with the Python package.
             'n_empty': 2,
         }
 
-        # plate and sequencing sample geometries
+    Alternatively, let library-prep-plate-prep calculate reasonable defaults.
+
+    .. code-block:: python
+
+        plate_init = lppp.utils.calc_init_vals(sample_data.shape[0])
+
+#. Plate arrangement problems accept a plate geometry object and sample geometry object. These geometry objects have an associated cost function, calculated over observed values in the associated metric space.
+
+    .. code-block:: python
+
         plates = lppp.geometries.Plates(
             plate_init['n_columns'],
             plate_init['n_rows'],
@@ -78,7 +90,32 @@ Finer user control is possible with the Python package.
             cost_fn=lppp.costs.CovarSimilarity()
         )
 
-        # problem init with geometries
+    Custom cost functions can be used, either by subclassing Python cost function classes or using convenience class methods.
+
+    .. code-block:: python
+
+        custom_sample_cost_fn = lppp.costs.CovarSimilarity.from_rules(
+            {
+                'species': 10,
+                'species_&_family': 0,
+                'species_&_donor': 0,
+                'species_&_family_&_timepoint': 0,
+                'species_&_donor_&_family': 0,
+                'species_&_donor_&_family_&_timepoint': 0,
+            }
+        )
+
+        samples = lppp.geometries.SequencingSamples.from_samples(
+            sample_data,
+            plate_init['n_empty'],
+            sum(plate_init['n_controls']),
+            cost_fn=custom_sample_cost_fn
+        )
+
+#. Initialize the plate arrangement problem.
+
+    .. code-block:: python
+
         prob = lppp.problems.ArrangementProblem(plates, samples)
 
         # seed control wells
@@ -95,29 +132,28 @@ Finer user control is possible with the Python package.
         # sample                                               
         # species 1:B002_0002 @ 03 days      0       1   A   A1
 
-With custom cost functions:
+#. Set up the seeded arrangement problem by first allocating control wells using a space-filling design method (here, Latin Hypercube Sampling).
 
-.. code-block:: python
+    .. code-block:: python
 
-    custom_sample_cost_fn = lppp.costs.CovarSimilarity.from_rules(
-        {
-            'species': 10,
-            'species_&_family': 0,
-            'species_&_donor': 0,
-            'species_&_family_&_timepoint': 0,
-            'species_&_donor_&_family': 0,
-            'species_&_donor_&_family_&_timepoint': 0,
-        }
-    )
+        ctrls_seeder = lppp.solvers.LHSampler()
+        ctrls_arrangement = ctrls_seeder(prob, nt=plate_init['n_controls'])
 
-    samples = lppp.geometries.SequencingSamples.from_samples(
-        sample_data,
-        plate_init['n_empty'],
-        sum(plate_init['n_controls']),
-        cost_fn=custom_sample_cost_fn
-    )
+#. Solve the plate arrangement problem.
 
-Plotting tools:
+    .. code-block:: python
+
+        solver = lppp.solvers.QAP_2opt()
+        soln = solver(prob, partial_match=ctrls_arrangement)
+
+        plate_arrangement = lppp.problems.soln_to_df(prob, soln)
+        print(plate_arrangement.head(1))
+        # plate  column row well
+        # sample                                               
+        # species 1:B002_0002 @ 03 days      0       1   A   A1
+
+
+library-prep-plate-prep provides tools for visualizing the problem set-up and solution space.
 
 .. code-block:: python
 
@@ -127,7 +163,8 @@ Plotting tools:
     lppp.plotting.plate_costs(plates, ncols=5, fig=fig, ax=ax)
 
 .. image:: plate_costfn.png
-  :width: 600
+  :width: 900
+  :align: center
   :alt: plate
 
 .. code-block:: python
@@ -138,7 +175,8 @@ Plotting tools:
     lppp.plotting.sample_costs(samples, ax=ax)
 
 .. image:: xcont_costfn.png
-  :width: 360
+  :width: 400
+  :align: center
   :alt: crosscontamination
 
 References
