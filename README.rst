@@ -149,19 +149,17 @@ library-prep-plate-prep provides tools for visualizing the problem set-up and so
     fig, ax = plt.subplots(figsize=(9, 2), layout='constrained')
     lppp.plotting.plate_costs(plates, ncols=5, fig=fig, ax=ax)
 
-.. image:: plate_costfn.png
+.. image:: docs/figures/plate_costfn.png
   :width: 900
   :align: center
   :alt: plate
 
 .. code-block:: python
 
-    import matplotlib.pyplot as plt
-
     fig, ax = plt.subplots(figsize=(4, 4), layout='constrained')
     lppp.plotting.sample_costs(samples, ax=ax)
 
-.. image:: xcont_costfn.png
+.. image:: docs/figures/xcont_costfn.png
   :width: 400
   :align: center
   :alt: crosscontamination
